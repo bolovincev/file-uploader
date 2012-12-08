@@ -106,13 +106,13 @@ class qqFileUploader {
     private $allowedExtensions;
     private $sizeLimit;
     private $file;
-	private $uploadName;
+    private $uploadName;
 
 	/**
 	 * @param array $allowedExtensions; defaults to an empty array
 	 * @param int $sizeLimit; defaults to the server's upload_max_filesize setting
 	 */
-    function __construct(array $allowedExtensions = null, $sizeLimit = null){
+    public function __construct(array $allowedExtensions = null, $sizeLimit = null){
     	if($allowedExtensions===null) {
     		$allowedExtensions = array();
     	}
@@ -134,6 +134,16 @@ class qqFileUploader {
         }
     }
     
+	/**
+     * Set the name of the uploaded file
+     * @param string $uploadName
+     */
+    public function setUploadName($uploadName)
+    {
+    	$this->uploadName = $uploadName;
+    	
+    }
+    
     /**
      * Get the name of the uploaded file
      * @return string
@@ -141,6 +151,7 @@ class qqFileUploader {
 	public function getUploadName(){
 		if( isset( $this->uploadName ) )
 			return $this->uploadName;
+		return '';
 	}
 	
 	/**
@@ -150,6 +161,7 @@ class qqFileUploader {
 	public function getName(){
 		if ($this->file)
 			return $this->file->getName();
+		return '';
 	}
     
 	/**
@@ -180,14 +192,14 @@ class qqFileUploader {
         }
         return $val;
     }
-    
+   
 	/**
 	 * Handle the uploaded file
 	 * @param string $uploadDirectory
 	 * @param string $replaceOldFile=true
 	 * @returns array('success'=>true) or array('error'=>'error message')
 	 */
-    function handleUpload($uploadDirectory, $replaceOldFile = FALSE){
+    public function handleUpload($uploadDirectory, $replaceOldFile = FALSE){
         if (!is_writable($uploadDirectory)){
             return array('error' => "Server error. Upload directory isn't writable.");
         }
@@ -206,7 +218,7 @@ class qqFileUploader {
             return array('error' => 'File is too large');
         }
         
-        $pathinfo = pathinfo($this->file->getName());
+        $pathinfo = pathinfo($this->getName());
         $filename = $pathinfo['filename'];
         //$filename = md5(uniqid());
         $ext = @$pathinfo['extension'];		// hide notices if extension is empty
@@ -218,16 +230,18 @@ class qqFileUploader {
         
         $ext = ($ext == '') ? $ext : '.' . $ext;
         
+        $this->setUploadName($filename . $ext);
+        
         if(!$replaceOldFile){
             /// don't overwrite previous files that were uploaded
-            while (file_exists($uploadDirectory . DIRECTORY_SEPARATOR . $filename . $ext)) {
+            while (file_exists($uploadDirectory . DIRECTORY_SEPARATOR . $this->getUploadName())) {
                 $filename .= rand(10, 99);
             }
+            $this->setUploadName($filename . $ext);
         }
-        
-		$this->uploadName = $filename . $ext;
 		
-        if ($this->file->save($uploadDirectory . DIRECTORY_SEPARATOR . $filename . $ext)){
+		
+        if ($this->file->save($uploadDirectory . DIRECTORY_SEPARATOR . $this->getUplaodName()){
             return array('success'=>true);
         } else {
             return array('error'=> 'Could not save uploaded file.' .
