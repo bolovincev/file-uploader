@@ -133,7 +133,16 @@ class qqFileUploader {
             $this->file = new qqUploadedFileXhr();
         }
     }
-    
+ 
+
+	/**
+ 	* Set the name of the uploaded file
+ 	* @param string $uploadName
+ 	*/ 
+	public function setUploadName($uploadName){
+ 		$this->uploadName = $uploadName
+ 	}
+ 
     /**
      * Get the name of the uploaded file
      * @return string
@@ -141,6 +150,7 @@ class qqFileUploader {
 	public function getUploadName(){
 		if( isset( $this->uploadName ) )
 			return $this->uploadName;
+		return '';
 	}
 	
 	/**
@@ -150,6 +160,7 @@ class qqFileUploader {
 	public function getName(){
 		if ($this->file)
 			return $this->file->getName();
+		return '';
 	}
     
 	/**
@@ -206,7 +217,7 @@ class qqFileUploader {
             return array('error' => 'File is too large');
         }
         
-        $pathinfo = pathinfo($this->file->getName());
+        $pathinfo = pathinfo($this->getName());
         $filename = $pathinfo['filename'];
         //$filename = md5(uniqid());
         $ext = @$pathinfo['extension'];		// hide notices if extension is empty
@@ -218,14 +229,16 @@ class qqFileUploader {
         
         $ext = ($ext == '') ? $ext : '.' . $ext;
         
+        $this->setUploadName($filename . $ext);
         if(!$replaceOldFile){
             /// don't overwrite previous files that were uploaded
-            while (file_exists($uploadDirectory . DIRECTORY_SEPARATOR . $filename . $ext)) {
+            while (file_exists($uploadDirectory . DIRECTORY_SEPARATOR . $this->getUploadName())) {
                 $filename .= rand(10, 99);
+                $this->setUploadName($filename . $ext);
             }
         }
         
-		$this->uploadName = $filename . $ext;
+		$this->setUploadName($filename . $ext);
 		
         if ($this->file->save($uploadDirectory . DIRECTORY_SEPARATOR . $filename . $ext)){
             return array('success'=>true);
